@@ -5,241 +5,243 @@ using UnityEngine.AI;
 
 public class Moba_Movement : MonoBehaviour
 {
-    private NavMeshAgent agent;
-    private Transform bottom;
-    public float walkSpeed = 6f;
-    public bool isWalking = false;
-    private Vector3 targetDestination;
-    private bool mouseRightClick = false;
-    [HideInInspector] private Vector3 worldMousePos;
-    [SerializeField] private float impedanceThreshold = 2f;
-    [SerializeField] private float playerToPlayerDistance = 1.5f;
-    private bool playerLockon = false;
-    private Transform enemyToFollow = null;
-    private Transform oldTarget = null;
-    bool isWaiting = false;
-    [SerializeField] float stationaryWaitTime = 3f;
-    private float waitTimer = 0f;
+   private NavMeshAgent agent;
+   private Transform bottom;
+   public float walkSpeed = 6f;
+   public bool isWalking = false;
+   private Vector3 targetDestination;
+   private bool mouseRightClick = false;
+   [HideInInspector] private Vector3 worldMousePos;
+   [SerializeField] private float impedanceThreshold = 2f;
+   [SerializeField] private float playerToPlayerDistance = 1.5f;
+   private bool playerLockon = false;
+   private Transform enemyToFollow = null;
+   private Transform oldTarget = null;
+   bool isWaiting = false;
+   [SerializeField] float stationaryWaitTime = 3f;
+   private float waitTimer = 0f;
+
+
+   // test
 
 
 
+   void Start()
+   {
+      agent = GetComponent<NavMeshAgent>();
+      bottom = transform.Find("Bottom");
+   }
 
-    void Start()
-    {
-        agent = GetComponent<NavMeshAgent>();
-        bottom = transform.Find("Bottom");
-    }
+   void Update()
+   {
+      setAgentMovementParameters();
+      handleMouseClicks();
+      getWorldMousePosition();
+      handleMovementImpedance();
 
-    void Update()
-    {
-        setAgentMovementParameters();
-        handleMouseClicks();
-        getWorldMousePosition();
-        handleMovementImpedance();
-
-        // if mouse is held down
-        if (Input.GetMouseButton(1))
-        {
-            // initial click detect
-            if (Input.GetMouseButtonDown(1))
+      // if mouse is held down
+      if (Input.GetMouseButton(1))
+      {
+         // initial click detect
+         if (Input.GetMouseButtonDown(1))
+         {
+            if (enemyClicked() != null)
             {
-                if (enemyClicked() != null)
-                {
-                    configTarget(true, false);
-                    oldTarget = enemyToFollow;
-                    enemyToFollow = enemyClicked();
-                    configTarget(false, true);
-                }
-                else if (enemyClicked() == null)
-                {
-                    configTarget(true, false);
-                    enemyToFollow = null;
-                }
+               configTarget(true, false);
+               oldTarget = enemyToFollow;
+               enemyToFollow = enemyClicked();
+               configTarget(false, true);
             }
-
-            // follow mouse while mouse right click down
-
-            if (enemyClicked() == null)
+            else if (enemyClicked() == null)
             {
-                targetDestination = worldMousePos;
-                agent.destination = targetDestination;
+               configTarget(true, false);
+               enemyToFollow = null;
             }
+         }
+
+         // follow mouse while mouse right click down
+
+         if (enemyClicked() == null)
+         {
+            targetDestination = worldMousePos;
+            agent.destination = targetDestination;
+         }
 
 
-        }
+      }
 
-        // follow enemy
+      // follow enemy
 
-        if (enemyToFollow != null)
-        {
-            float distanceP2P = (transform.position - enemyToFollow.transform.position).magnitude;
+      if (enemyToFollow != null)
+      {
+         float distanceP2P = (transform.position - enemyToFollow.transform.position).magnitude;
 
-            bool enemyWithinProximity()
+         bool enemyWithinProximity()
+         {
+            if (distanceP2P <= playerToPlayerDistance)
             {
-                if (distanceP2P <= playerToPlayerDistance)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            // stop walking if too close to enemy
-
-            if (enemyWithinProximity())
-            {
-                Debug.Log("within proximity");
-                isWaiting = true;
-                agent.ResetPath();
-            }
-
-
-            if (isWaiting)
-            {
-                if ((oldTarget == null && enemyToFollow != null) || oldTarget == enemyToFollow)
-                {
-                    delayedFollow();
-                }
-
-                if ((oldTarget != enemyToFollow) && oldTarget != null && enemyToFollow != null)
-                {
-                    followTarget();
-                }
+               return true;
             }
             else
             {
-                followTarget();
+               return false;
             }
+         }
+
+         // stop walking if too close to enemy
+
+         if (enemyWithinProximity())
+         {
+            Debug.Log("within proximity");
+            isWaiting = true;
+            agent.ResetPath();
+         }
 
 
-            void delayedFollow()
+         if (isWaiting)
+         {
+            if ((oldTarget == null && enemyToFollow != null) || oldTarget == enemyToFollow)
             {
-                waitTimer += Time.deltaTime;
-
-                if (waitTimer >= stationaryWaitTime)
-                {
-                    waitTimer = 0;
-                    followTarget();
-                }
-
+               delayedFollow();
             }
 
-
-            void followTarget()
+            if ((oldTarget != enemyToFollow) && oldTarget != null && enemyToFollow != null)
             {
-
-                targetDestination = enemyToFollow.transform.position;
-                agent.destination = targetDestination;
-                isWaiting = false;
+               followTarget();
             }
+         }
+         else
+         {
+            followTarget();
+         }
 
-            // reset counter
-            if (Input.GetMouseButtonDown(1) && (enemyToFollow != oldTarget))
+
+         void delayedFollow()
+         {
+            waitTimer += Time.deltaTime;
+
+            if (waitTimer >= stationaryWaitTime)
             {
-                waitTimer = 0;
+               waitTimer = 0;
+               followTarget();
             }
-        }
-        else if (enemyToFollow == null)
-        {
+
+         }
+
+
+         void followTarget()
+         {
+
+            targetDestination = enemyToFollow.transform.position;
+            agent.destination = targetDestination;
             isWaiting = false;
-        }
+         }
 
-        Debug.Log(oldTarget);
-        Debug.Log(enemyToFollow);
-        Debug.Log(isWaiting);
-        Debug.Log(enemyToFollow == oldTarget);
-        Debug.Log(waitTimer);
+         // reset counter
+         if (Input.GetMouseButtonDown(1) && (enemyToFollow != oldTarget))
+         {
+            waitTimer = 0;
+         }
+      }
+      else if (enemyToFollow == null)
+      {
+         isWaiting = false;
+      }
+
+      Debug.Log(oldTarget);
+      Debug.Log(enemyToFollow);
+      Debug.Log(isWaiting);
+      Debug.Log(enemyToFollow == oldTarget);
+      Debug.Log(waitTimer);
 
 
-    }
+   }
 
-    void handleMouseClicks()
-    {
-        //  click handler
+   void handleMouseClicks()
+   {
+      //  click handler
 
-        if (Input.GetMouseButton(1))
-        {
-            mouseRightClick = true;
-        }
-        else if (Input.GetMouseButtonUp(1))
-        {
-            mouseRightClick = false;
-        }
-    }
+      if (Input.GetMouseButton(1))
+      {
+         mouseRightClick = true;
+      }
+      else if (Input.GetMouseButtonUp(1))
+      {
+         mouseRightClick = false;
+      }
+   }
 
-    void getWorldMousePosition()
-    {
-        // get  position on plane
+   void getWorldMousePosition()
+   {
+      // get  position on plane
 
-        Plane dirPlane = new Plane(Vector3.up, bottom.transform.position);
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        worldMousePos = bottom.transform.position;
-        float enter = 0f;
+      Plane dirPlane = new Plane(Vector3.up, bottom.transform.position);
+      Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+      worldMousePos = bottom.transform.position;
+      float enter = 0f;
 
-        if (dirPlane.Raycast(ray, out enter))
-        {
-            worldMousePos = ray.GetPoint(enter);
-            Vector3 dir = worldMousePos - bottom.transform.position;
-            Vector3 direction = dir;
-            direction.Normalize();
+      if (dirPlane.Raycast(ray, out enter))
+      {
+         worldMousePos = ray.GetPoint(enter);
+         Vector3 dir = worldMousePos - bottom.transform.position;
+         Vector3 direction = dir;
+         direction.Normalize();
 
-            Debug.DrawRay(bottom.transform.position, dir, Color.white);
-            Debug.DrawRay(bottom.transform.position, agent.destination - bottom.transform.position, Color.green);
-        }
-    }
+         Debug.DrawRay(bottom.transform.position, dir, Color.white);
+         Debug.DrawRay(bottom.transform.position, agent.destination - bottom.transform.position, Color.green);
+      }
+   }
 
-    private Transform enemyClicked()
-    {
-        Ray screenToWorldRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+   private Transform enemyClicked()
+   {
+      Ray screenToWorldRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        if (Physics.Raycast(screenToWorldRay, out RaycastHit screenToWorldHit) && screenToWorldHit.transform.tag == "Enemy")
-        {
-            return screenToWorldHit.transform;
-        }
-        else
-        {
-            return null;
-        }
-    }
+      if (Physics.Raycast(screenToWorldRay, out RaycastHit screenToWorldHit) && screenToWorldHit.transform.tag == "Enemy")
+      {
+         return screenToWorldHit.transform;
+      }
+      else
+      {
+         return null;
+      }
+   }
 
-    void configTarget(bool resetPath, bool outlines)
-    {
-        if (resetPath)
-        {
-            // reset path
-            agent.ResetPath();
-        }
+   void configTarget(bool resetPath, bool outlines)
+   {
+      if (resetPath)
+      {
+         // reset path
+         agent.ResetPath();
+      }
 
-        if (enemyToFollow != null)
-        {
-            if (outlines)
-            {
-                // enable outlines   
-                enemyToFollow.GetComponent<Outline>().enabled = true;
-            }
-            else
-            {
-                // disable outlines     
-                enemyToFollow.GetComponent<Outline>().enabled = false;
-            }
-        }
-    }
+      if (enemyToFollow != null)
+      {
+         if (outlines)
+         {
+            // enable outlines   
+            enemyToFollow.GetComponent<Outline>().enabled = true;
+         }
+         else
+         {
+            // disable outlines     
+            enemyToFollow.GetComponent<Outline>().enabled = false;
+         }
+      }
+   }
 
-    void handleMovementImpedance()
-    {
-        if (agent.velocity.magnitude < impedanceThreshold)
-        {
-            agent.ResetPath();
-        }
-    }
+   void handleMovementImpedance()
+   {
+      if (agent.velocity.magnitude < impedanceThreshold)
+      {
+         agent.ResetPath();
+      }
+   }
 
-    void setAgentMovementParameters()
-    {
-        // set NavMeshAgent parameters
-        agent.speed = walkSpeed;
-    }
+   void setAgentMovementParameters()
+   {
+      // set NavMeshAgent parameters
+      agent.speed = walkSpeed;
+   }
 
 
 }
