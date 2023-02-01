@@ -962,7 +962,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bottom: {fileID: 0}
-  walkSpeed: 5
+  walkSpeed: 2
   destination_1: {fileID: 0}
 --- !u!114 &6269247300447173021
 MonoBehaviour:
@@ -978,8 +978,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   outlineMode: 1
   outlineColor: {r: 1, g: 0, b: 0, a: 1}
-  outlineWidth: 2
-  precomputeOutline: 0
+  outlineWidth: 2.3
+  precomputeOutline: 1
   bakeKeys: []
   bakeValues: []
 --- !u!1 &2940622392924344806

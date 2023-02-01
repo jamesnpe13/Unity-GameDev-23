@@ -23,179 +23,172 @@ public class Moba_Movement : MonoBehaviour
    private bool selectionReset = true;
    private bool mouseHeld = false;
    private bool isFollowing = false;
+   private bool isTraveling = false;
+   private enum target
+   {
+      mouse,
+      enemy,
+      standby
+   }
+   [SerializeField] private target tg;
+   private enum proximityState
+   {
+      withinProximity,
+      leavingProximity,
+      notWithinProximity,
+      standby
+   }
+   private proximityState ps;
+
 
    void Start()
    {
       agent = GetComponent<NavMeshAgent>();
       bottom = transform.Find("Bottom");
+      tg = target.standby;
+      ps = proximityState.standby;
+
    }
 
    void Update()
    {
       setAgentMovementParameters();
-      // handleMouseClicks();
       getWorldMousePosition();
       // handleMovementImpedance();
 
-      if (selectionReset)
+      // movement and targeting states
+      switch (tg)
       {
-         // check target
-         if (Input.GetMouseButtonDown(1))
-         {
-            if (enemyClicked() != null)
+         case target.mouse:
+            if (Input.GetMouseButton(1))
             {
-               selectionBehavior(true, false, true);
-               oldTarget = newTarget;
-               newTarget = enemyClicked();
-               targetOutline();
-
+               targetDestination = worldMousePos;
             }
-            else if (enemyClicked() == null)
-            {
-               selectionBehavior(false, true, false);
-            }
+            move();
 
-            Debug.Log("OLD: " + oldTarget);
-            Debug.Log("NEW: " + newTarget);
-         }
-         // follow enemy
-         if (isFollowing)
-         {
+            if (oldTarget != null) oldTarget.GetComponent<Outline>().enabled = false;
+            if (newTarget != null) newTarget.GetComponent<Outline>().enabled = false;
+            break;
+
+         case target.enemy:
             targetDestination = newTarget.transform.position;
-            agentMoving(true, newTarget.transform.position);
-         }
-      }
-      else if (!selectionReset)
-      {
-         // follow mouse
-         if (mouseHeld)
-         {
-            oldTarget = newTarget;
-            newTarget = enemyClicked();
+            move();
 
-            if (enemyClicked() == null) {
-               targetOutline();
-            }
+            if (oldTarget != null) oldTarget.GetComponent<Outline>().enabled = false;
+            if (newTarget != null) newTarget.GetComponent<Outline>().enabled = true;
+            break;
 
-            agentMoving(true, worldMousePos);
-
-            if (Input.GetMouseButtonUp(1))
-            {
-               selectionBehavior(true, false, false);
-            }
-         }
-         else if (!mouseHeld)
-         {
-            agentMoving(true, worldMousePos);
-            selectionBehavior(true, false, false);
-         }
-      }
-
-      // if (Input.GetMouseButtonUp(1))
-      // {
-      //    selectionBehavior(true, false, false);
-      // }
-
-      void selectionBehavior(bool _selectionReset, bool _mouseHeld, bool _isFollowing)
-      {
-         selectionReset = _selectionReset;
-         mouseHeld = _mouseHeld;
-         isFollowing = _isFollowing;
-      }
-
-      void agentMoving(bool isMoving, Vector3 target)
-      {
-         if (isMoving)
-         {
-            agent.destination = target;
-         }
-         else if (!isMoving)
-         {
+         case target.standby:
             agent.ResetPath();
-         }
+
+            if (oldTarget != null) oldTarget.GetComponent<Outline>().enabled = false;
+            if (newTarget != null) newTarget.GetComponent<Outline>().enabled = false;
+            break;
       }
 
-      void targetOutline()
+      if (Input.GetMouseButtonDown(1))
       {
-         if (oldTarget != null)
+         oldTarget = newTarget;
+
+         if (enemyClicked() == null)
          {
-            oldTarget.GetComponent<Outline>().enabled = false;
+            newTarget = null;
+            tg = target.mouse;
+         }
+         else if (enemyClicked() != null)
+         {
+            newTarget = enemyClicked();
+            tg = target.enemy;
          }
 
-         if (newTarget != null)
-         {
-            newTarget.GetComponent<Outline>().enabled = true;
-         }
-
-
-         if (oldTarget == newTarget && oldTarget != null && newTarget != null)
-         {
-            newTarget.GetComponent<Outline>().enabled = true;
-         }
-
-
+         Debug.Log("OLD " + oldTarget);
+         Debug.Log("NEW " + newTarget);
       }
 
-      // follow enemy
-
-      if (newTarget != null)
+      void move()
       {
+         // proximity check and delay resume
 
+         agent.destination = targetDestination;         
 
-         bool enemyWithinProximity(Transform target)
+         if (tg == target.mouse)
          {
-            float distanceP2P = (transform.position - target.transform.position).magnitude;
-
-            if (distanceP2P <= playerToPlayerDistance)
-            {
-               return true;
-            }
-            else
-            {
-               return false;
-            }
+            ps = proximityState.standby;
          }
 
-         // stop walking if too close to enemy
-
-
-
-
-
-         void stop()
+         if (tg == target.enemy)
          {
-            agent.isStopped = true;
+            if ((newTarget.transform.position - transform.position).magnitude <= playerToPlayerDistance)
+            {
+               ps = proximityState.withinProximity;
+            }
+
+            else if ((newTarget.transform.position - transform.position).magnitude > playerToPlayerDistance)
+            {
+               if (agent.isStopped)
+               {
+                  ps = proximityState.leavingProximity;
+               }
+               else if (!agent.isStopped)
+               {
+                  ps = proximityState.notWithinProximity;
+               }
+            }
+
+         
          }
 
-         void delay()
+         switch (ps)
          {
-            waitTimer += Time.deltaTime;
-
-            if (waitTimer >= stationaryWaitTime)
-            {
-               waitTimer = 0;
+            case proximityState.standby:
                agent.isStopped = false;
-            }
+               break;
+
+            case proximityState.withinProximity:
+               agent.isStopped = true;
+               break;
+
+            case proximityState.leavingProximity:
+
+               // delay
+
+               waitTimer += Time.deltaTime;
+
+               if (waitTimer >= stationaryWaitTime)
+               {
+                  waitTimer = 0;
+                  agent.isStopped = false;
+               }
+
+               break;
+
+            case proximityState.notWithinProximity:
+               agent.isStopped = false;
+               break;
          }
 
-         void go()
-         {
-            agent.isStopped = false;
-         }
+
+      }
+
+      // Debug.Log(tg);
+      // Debug.Log(ps);
+   }
 
 
 
 
+   Transform enemyClicked()
+   {
+      Ray screenToWorldRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 
+      if (Physics.Raycast(screenToWorldRay, out RaycastHit screenToWorldHit) && screenToWorldHit.transform.tag == "Enemy")
+      {
 
-
-
-
-         // reset counter
-         if (Input.GetMouseButtonDown(1) && (newTarget != oldTarget))
-         {
-            waitTimer = 0;
-         }
+         return screenToWorldHit.transform;
+      }
+      else
+      {
+         return null;
       }
    }
 
@@ -220,19 +213,7 @@ public class Moba_Movement : MonoBehaviour
       }
    }
 
-   private Transform enemyClicked()
-   {
-      Ray screenToWorldRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-      if (Physics.Raycast(screenToWorldRay, out RaycastHit screenToWorldHit) && screenToWorldHit.transform.tag == "Enemy")
-      {
-         return screenToWorldHit.transform;
-      }
-      else
-      {
-         return null;
-      }
-   }
 
 
    void handleMovementImpedance()
@@ -249,5 +230,5 @@ public class Moba_Movement : MonoBehaviour
       agent.speed = walkSpeed;
    }
 
-
 }
+
