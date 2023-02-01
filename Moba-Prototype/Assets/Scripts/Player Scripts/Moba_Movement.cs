@@ -15,16 +15,14 @@ public class Moba_Movement : MonoBehaviour
    [SerializeField] private float impedanceThreshold = 2f;
    [SerializeField] private float playerToPlayerDistance = 1.5f;
    private bool playerLockon = false;
-   private Transform enemyToFollow = null;
+   private Transform newTarget = null;
    private Transform oldTarget = null;
    bool isWaiting = false;
    [SerializeField] float stationaryWaitTime = 3f;
    private float waitTimer = 0f;
-
-
-   // test
-
-
+   private bool selectionReset = true;
+   private bool mouseHeld = false;
+   private bool isFollowing = false;
 
    void Start()
    {
@@ -35,36 +33,104 @@ public class Moba_Movement : MonoBehaviour
    void Update()
    {
       setAgentMovementParameters();
-      handleMouseClicks();
+      // handleMouseClicks();
       getWorldMousePosition();
-      handleMovementImpedance();
+      // handleMovementImpedance();
 
-      // if mouse is held down
-      if (Input.GetMouseButton(1))
+      if (selectionReset)
       {
-         // initial click detect
+         // check target
          if (Input.GetMouseButtonDown(1))
          {
             if (enemyClicked() != null)
             {
-               configTarget(true, false);
-               oldTarget = enemyToFollow;
-               enemyToFollow = enemyClicked();
-               configTarget(false, true);
+               selectionBehavior(true, false, true);
+               oldTarget = newTarget;
+               newTarget = enemyClicked();
+               targetOutline();
+
             }
             else if (enemyClicked() == null)
             {
-               configTarget(true, false);
-               enemyToFollow = null;
+               selectionBehavior(false, true, false);
+            }
+
+            Debug.Log("OLD: " + oldTarget);
+            Debug.Log("NEW: " + newTarget);
+         }
+         // follow enemy
+         if (isFollowing)
+         {
+            targetDestination = newTarget.transform.position;
+            agentMoving(true, newTarget.transform.position);
+         }
+      }
+      else if (!selectionReset)
+      {
+         // follow mouse
+         if (mouseHeld)
+         {
+            oldTarget = newTarget;
+            newTarget = enemyClicked();
+
+            if (enemyClicked() == null) {
+               targetOutline();
+            }
+
+            agentMoving(true, worldMousePos);
+
+            if (Input.GetMouseButtonUp(1))
+            {
+               selectionBehavior(true, false, false);
             }
          }
-
-         // follow mouse while mouse right click down
-
-         if (enemyClicked() == null)
+         else if (!mouseHeld)
          {
-            targetDestination = worldMousePos;
-            agent.destination = targetDestination;
+            agentMoving(true, worldMousePos);
+            selectionBehavior(true, false, false);
+         }
+      }
+
+      // if (Input.GetMouseButtonUp(1))
+      // {
+      //    selectionBehavior(true, false, false);
+      // }
+
+      void selectionBehavior(bool _selectionReset, bool _mouseHeld, bool _isFollowing)
+      {
+         selectionReset = _selectionReset;
+         mouseHeld = _mouseHeld;
+         isFollowing = _isFollowing;
+      }
+
+      void agentMoving(bool isMoving, Vector3 target)
+      {
+         if (isMoving)
+         {
+            agent.destination = target;
+         }
+         else if (!isMoving)
+         {
+            agent.ResetPath();
+         }
+      }
+
+      void targetOutline()
+      {
+         if (oldTarget != null)
+         {
+            oldTarget.GetComponent<Outline>().enabled = false;
+         }
+
+         if (newTarget != null)
+         {
+            newTarget.GetComponent<Outline>().enabled = true;
+         }
+
+
+         if (oldTarget == newTarget && oldTarget != null && newTarget != null)
+         {
+            newTarget.GetComponent<Outline>().enabled = true;
          }
 
 
@@ -72,12 +138,14 @@ public class Moba_Movement : MonoBehaviour
 
       // follow enemy
 
-      if (enemyToFollow != null)
+      if (newTarget != null)
       {
-         float distanceP2P = (transform.position - enemyToFollow.transform.position).magnitude;
 
-         bool enemyWithinProximity()
+
+         bool enemyWithinProximity(Transform target)
          {
+            float distanceP2P = (transform.position - target.transform.position).magnitude;
+
             if (distanceP2P <= playerToPlayerDistance)
             {
                return true;
@@ -90,84 +158,44 @@ public class Moba_Movement : MonoBehaviour
 
          // stop walking if too close to enemy
 
-         if (enemyWithinProximity())
+
+
+
+
+         void stop()
          {
-            Debug.Log("within proximity");
-            isWaiting = true;
-            agent.ResetPath();
+            agent.isStopped = true;
          }
 
-
-         if (isWaiting)
-         {
-            if ((oldTarget == null && enemyToFollow != null) || oldTarget == enemyToFollow)
-            {
-               delayedFollow();
-            }
-
-            if ((oldTarget != enemyToFollow) && oldTarget != null && enemyToFollow != null)
-            {
-               followTarget();
-            }
-         }
-         else
-         {
-            followTarget();
-         }
-
-
-         void delayedFollow()
+         void delay()
          {
             waitTimer += Time.deltaTime;
 
             if (waitTimer >= stationaryWaitTime)
             {
                waitTimer = 0;
-               followTarget();
+               agent.isStopped = false;
             }
-
          }
 
-
-         void followTarget()
+         void go()
          {
-
-            targetDestination = enemyToFollow.transform.position;
-            agent.destination = targetDestination;
-            isWaiting = false;
+            agent.isStopped = false;
          }
+
+
+
+
+
+
+
+
 
          // reset counter
-         if (Input.GetMouseButtonDown(1) && (enemyToFollow != oldTarget))
+         if (Input.GetMouseButtonDown(1) && (newTarget != oldTarget))
          {
             waitTimer = 0;
          }
-      }
-      else if (enemyToFollow == null)
-      {
-         isWaiting = false;
-      }
-
-      Debug.Log(oldTarget);
-      Debug.Log(enemyToFollow);
-      Debug.Log(isWaiting);
-      Debug.Log(enemyToFollow == oldTarget);
-      Debug.Log(waitTimer);
-
-
-   }
-
-   void handleMouseClicks()
-   {
-      //  click handler
-
-      if (Input.GetMouseButton(1))
-      {
-         mouseRightClick = true;
-      }
-      else if (Input.GetMouseButtonUp(1))
-      {
-         mouseRightClick = false;
       }
    }
 
@@ -206,28 +234,6 @@ public class Moba_Movement : MonoBehaviour
       }
    }
 
-   void configTarget(bool resetPath, bool outlines)
-   {
-      if (resetPath)
-      {
-         // reset path
-         agent.ResetPath();
-      }
-
-      if (enemyToFollow != null)
-      {
-         if (outlines)
-         {
-            // enable outlines   
-            enemyToFollow.GetComponent<Outline>().enabled = true;
-         }
-         else
-         {
-            // disable outlines     
-            enemyToFollow.GetComponent<Outline>().enabled = false;
-         }
-      }
-   }
 
    void handleMovementImpedance()
    {

@@ -1201,8 +1201,8 @@ GameObject:
   - component: {fileID: 6154774984598917355}
   - component: {fileID: 1227071800790812501}
   - component: {fileID: 2156725336157866134}
-  - component: {fileID: 6382524301168481088}
-  - component: {fileID: 332031452091756658}
+  - component: {fileID: 2475379716813300959}
+  - component: {fileID: 7951058195009235579}
   m_Layer: 0
   m_Name: Moba_Player_1
   m_TagString: Player
@@ -1319,7 +1319,7 @@ MonoBehaviour:
   precomputeOutline: 1
   bakeKeys: []
   bakeValues: []
---- !u!114 &6382524301168481088
+--- !u!114 &2475379716813300959
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1333,9 +1333,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   walkSpeed: 6
   isWalking: 0
-  impedanceThreshold: 2
+  impedanceThreshold: 0.5
   playerToPlayerDistance: 1.5
---- !u!114 &332031452091756658
+  stationaryWaitTime: 1
+--- !u!114 &7951058195009235579
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
