@@ -27,7 +27,8 @@ public class Moba_Movement : MonoBehaviour
    private enum target
    {
       mouse,
-      enemy,
+      newEnemy,
+      sameEnemy,
       standby
    }
    [SerializeField] private target tg;
@@ -70,7 +71,15 @@ public class Moba_Movement : MonoBehaviour
             if (newTarget != null) newTarget.GetComponent<Outline>().enabled = false;
             break;
 
-         case target.enemy:
+         case target.newEnemy:
+            targetDestination = newTarget.transform.position;
+            move();
+
+            if (oldTarget != null) oldTarget.GetComponent<Outline>().enabled = false;
+            if (newTarget != null) newTarget.GetComponent<Outline>().enabled = true;
+            break;
+
+         case target.sameEnemy:
             targetDestination = newTarget.transform.position;
             move();
 
@@ -98,25 +107,47 @@ public class Moba_Movement : MonoBehaviour
          else if (enemyClicked() != null)
          {
             newTarget = enemyClicked();
-            tg = target.enemy;
-         }
 
-         Debug.Log("OLD " + oldTarget);
-         Debug.Log("NEW " + newTarget);
+            if (enemyClicked() == oldTarget)
+            {
+               tg = target.sameEnemy;
+            }
+            else if (enemyClicked() != oldTarget)
+            {
+               if (oldTarget != null)
+               {
+                  tg = target.newEnemy;
+               }
+            }
+            Debug.Log(tg);
+         }
       }
 
       void move()
       {
-         // proximity check and delay resume
+         agent.destination = targetDestination;
 
-         agent.destination = targetDestination;         
+         // proximity check and delay resume
 
          if (tg == target.mouse)
          {
             ps = proximityState.standby;
          }
+         else if (tg == target.newEnemy)
+         {
+            if ((newTarget.transform.position - transform.position).magnitude <= playerToPlayerDistance)
+            {
+               ps = proximityState.withinProximity;
+               tg = target.sameEnemy;
+            }
 
-         if (tg == target.enemy)
+            else if ((newTarget.transform.position - transform.position).magnitude > playerToPlayerDistance)
+            {
+               ps = proximityState.notWithinProximity;
+               tg = target.sameEnemy;
+            }
+         }
+         else if (tg == target.sameEnemy)
          {
             if ((newTarget.transform.position - transform.position).magnitude <= playerToPlayerDistance)
             {
@@ -134,8 +165,6 @@ public class Moba_Movement : MonoBehaviour
                   ps = proximityState.notWithinProximity;
                }
             }
-
-         
          }
 
          switch (ps)
@@ -166,8 +195,6 @@ public class Moba_Movement : MonoBehaviour
                agent.isStopped = false;
                break;
          }
-
-
       }
 
       // Debug.Log(tg);
@@ -228,6 +255,10 @@ public class Moba_Movement : MonoBehaviour
    {
       // set NavMeshAgent parameters
       agent.speed = walkSpeed;
+   }
+
+   void customFunction()
+   {
    }
 
 }

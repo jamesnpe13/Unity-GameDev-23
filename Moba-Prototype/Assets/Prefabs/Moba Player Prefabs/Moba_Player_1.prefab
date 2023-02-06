@@ -1336,6 +1336,7 @@ MonoBehaviour:
   impedanceThreshold: 0.5
   playerToPlayerDistance: 1.5
   stationaryWaitTime: 1
+  tg: 0
 --- !u!114 &7951058195009235579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1816,8 +1817,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1647b139402f9764fba57218d348f7b0, type: 2}
-  - {fileID: 2100000, guid: ad4f439d962ee8543b0e770166af5fe6, type: 2}
+  - {fileID: 2100000, guid: 8ed6be4d200f44763bb6a52ceb413920, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2220,7 +2220,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4531eda223327994caffd2b762f1300d, type: 2}
+  - {fileID: 2100000, guid: 8a93812762c21524aaa0d41854f6eacf, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

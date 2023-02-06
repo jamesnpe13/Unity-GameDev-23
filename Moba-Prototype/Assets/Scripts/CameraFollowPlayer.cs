@@ -10,7 +10,7 @@ public class CameraFollowPlayer : MonoBehaviour
 
    void Start()
    {
-      offset = new Vector3(6.51000023f, 8.43999958f, -5.13999987f);
+      offset = new Vector3(4.80999994f, 9.61999989f, 8.10000038f);
       target = GameObject.FindGameObjectWithTag("Player");
    }
 

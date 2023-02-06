@@ -849,8 +849,8 @@ GameObject:
   - component: {fileID: 2186543623419140332}
   - component: {fileID: 5225333874259497984}
   - component: {fileID: 930368296337671102}
-  - component: {fileID: 5923090004677738865}
   - component: {fileID: 6269247300447173021}
+  - component: {fileID: 5923090004677738865}
   m_Layer: 0
   m_Name: Player - FollowTarget
   m_TagString: Enemy
@@ -887,8 +887,8 @@ CapsuleCollider:
   m_Material: {fileID: 13400000, guid: ae8b4bda410286f489c5c25efd7e1b88, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.8
-  m_Height: 2.5
+  m_Radius: 1.5
+  m_Height: 1.5
   m_Direction: 1
   m_Center: {x: 0, y: 1, z: 0}
 --- !u!195 &2186543623419140332
@@ -949,21 +949,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 2
---- !u!114 &5923090004677738865
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2743109808042602225}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31b131c13b5990341a9781f5b16e7464, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bottom: {fileID: 0}
-  walkSpeed: 2
-  destination_1: {fileID: 0}
 --- !u!114 &6269247300447173021
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -982,6 +967,21 @@ MonoBehaviour:
   precomputeOutline: 1
   bakeKeys: []
   bakeValues: []
+--- !u!114 &5923090004677738865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2743109808042602225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31b131c13b5990341a9781f5b16e7464, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bottom: {fileID: 0}
+  walkSpeed: 2
+  destination_1: {fileID: 0}
 --- !u!1 &2940622392924344806
 GameObject:
   m_ObjectHideFlags: 0
@@ -1606,7 +1606,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: cd191d5608d7721469e762af3d9b38e9, type: 2}
+  - {fileID: 2100000, guid: 3e8c54ca6d630ab4e8622fefdda6a07b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2363,7 +2363,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4531eda223327994caffd2b762f1300d, type: 2}
+  - {fileID: 2100000, guid: 3d972652b3903b8489bffe03126a7f07, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
